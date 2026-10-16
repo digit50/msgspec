@@ -1566,6 +1566,14 @@ class TestDecodeArrayTypeUsesTupleIfHashableRequired:
         assert out == orig
         assert type(next(iter(out))) is frozendict
 
+    @py315_or_later_only
+    def test_encode_frozendict_subclass_dict_key(self):
+        class MyFrozenDict(frozendict):
+            pass
+
+        data = msgspec.msgpack.encode({MyFrozenDict({"a": 1}): 1})
+        assert data == b"\x81\x81\xa1a\x01\x01"
+
 
 class TestUntypedDecoder(CommonTypeTestBase):
     """Check the untyped deserializer works for common types"""
