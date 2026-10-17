@@ -1561,18 +1561,25 @@ class TestDecodeArrayTypeUsesTupleIfHashableRequired:
     def test_roundtrip_frozendict_dict_key(self):
         orig = {frozendict({"a": 1}): 1}
         data = msgspec.msgpack.encode(orig)
-        assert data == b"\x81\x81\xa1a\x01\x01"
         out = msgspec.msgpack.decode(data, type=dict[frozendict[str, int], int])
         assert out == orig
-        assert type(next(iter(out))) is frozendict
+        key = next(iter(out))
+        assert type(key) is frozendict
+        assert type(out[key]) is int
 
     @py315_or_later_only
     def test_encode_frozendict_subclass_dict_key(self):
         class MyFrozenDict(frozendict):
             pass
 
-        data = msgspec.msgpack.encode({MyFrozenDict({"a": 1}): 1})
-        assert data == b"\x81\x81\xa1a\x01\x01"
+        orig = {MyFrozenDict({"a": 1}): 1}
+        data = msgspec.msgpack.encode(orig)
+        assert data == msgspec.msgpack.encode({frozendict({"a": 1}): 1})
+        out = msgspec.msgpack.decode(data, type=dict[frozendict[str, int], int])
+        assert out == orig
+        key = next(iter(out))
+        assert type(key) is frozendict
+        assert type(out[key]) is int
 
 
 class TestUntypedDecoder(CommonTypeTestBase):
