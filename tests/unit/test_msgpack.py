@@ -1581,6 +1581,19 @@ class TestDecodeArrayTypeUsesTupleIfHashableRequired:
         assert type(key) is frozendict
         assert type(out[key]) is int
 
+        def dec_hook(typ, obj):
+            assert typ is MyFrozenDict
+            assert type(obj) is dict
+            return typ(obj)
+
+        out = msgspec.msgpack.decode(
+            data, type=dict[MyFrozenDict, int], dec_hook=dec_hook
+        )
+        assert out == orig
+        key = next(iter(out))
+        assert type(key) is MyFrozenDict
+        assert type(out[key]) is int
+
 
 class TestUntypedDecoder(CommonTypeTestBase):
     """Check the untyped deserializer works for common types"""
